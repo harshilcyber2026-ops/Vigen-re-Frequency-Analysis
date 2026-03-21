@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Vigenère Cracker — FlagVault CTF</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔓</text></svg>"/>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-brand">
+    <span class="bracket">[</span><span class="brand-flag">FLAG</span>VAULT<span class="bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Challenges</a></li>
+    <li><a href="#" class="active">Vigenère</a></li>
+    <li><a href="#">Scoreboard</a></li>
+  </ul>
+  <div class="nav-status"><div class="status-dot"></div>CHALLENGE LIVE</div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header class="page-header" data-index="C4">
+    <div class="page-eyebrow">CRYPTOGRAPHY · CHALLENGE #C4</div>
+    <h1 class="page-title"><span class="hl2">Vigenère</span> <span class="hl">Frequency Analysis</span></h1>
+    <p class="page-desc">
+      A long Vigenère-encrypted message has been intercepted. No key is provided —<br/>
+      use frequency analysis and the Index of Coincidence to crack it.
+    </p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat-box"><span class="stat-val">300</span><span class="stat-label">Points</span></div>
+    <div class="stat-box"><span class="stat-val amber">Medium</span><span class="stat-label">Difficulty</span></div>
+    <div class="stat-box"><span class="stat-val red">31</span><span class="stat-label">Solves</span></div>
+    <div class="stat-box"><span class="stat-val">Crypto</span><span class="stat-label">Category</span></div>
+  </div>
+
+  <!-- Download bar -->
+  <div class="download-bar">
+    <span class="dl-icon">📄</span>
+    <span class="dl-name">vigenere.txt</span>
+    <span class="dl-size">1.4 KB · Encrypted ciphertext</span>
+    <a href="files/vigenere.txt" download class="btn btn-primary dl-btn">&darr; Download File</a>
+  </div>
+
+  <div class="vig-layout">
+
+    <!-- ═══ LEFT: Interactive Cracker Tool ═══ -->
+    <div class="vig-left">
+
+      <!-- Paste ciphertext -->
+      <div class="sec-divider"><h3>Step 1 — Load Ciphertext</h3></div>
+      <div class="load-card">
+        <div class="lc-actions">
+          <button class="btn btn-primary" onclick="loadBuiltIn()">⚡ Load Challenge File</button>
+          <span class="lc-sep">or paste below</span>
+        </div>
+        <textarea class="ct-textarea" id="ct-input" placeholder="Paste ciphertext here (letters only, spaces ignored)…" rows="6"></textarea>
+        <div class="lc-stats" id="lc-stats">
+          <span class="lcs-item">Letters: <strong id="ct-len">0</strong></span>
+          <span class="lcs-item">Unique: <strong id="ct-uniq">0</strong></span>
+          <span class="lcs-item">IC: <strong id="ct-ic">—</strong></span>
+        </div>
+      </div>
+
+      <!-- Step 2: Key Length -->
+      <div class="sec-divider"><h3>Step 2 — Detect Key Length (Index of Coincidence)</h3></div>
+      <div class="ic-card">
+        <p class="ic-desc">For each candidate key length L, split the ciphertext into L groups and compute the average IC. English text has IC ≈ 0.065. The key length that raises IC closest to 0.065 is the winner.</p>
+        <button class="btn btn-primary" id="btn-ic" onclick="runICAnalysis()">📊 Run IC Analysis</button>
+        <div class="ic-chart-wrap hidden" id="ic-chart-wrap">
+          <div class="ic-chart-label">// IC vs KEY LENGTH — look for the spike near 0.065</div>
+          <div class="ic-chart" id="ic-chart"></div>
+          <div class="ic-result" id="ic-result"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Frequency Analysis -->
+      <div class="sec-divider"><h3>Step 3 — Frequency Analysis per Key Position</h3></div>
+      <div class="freq-card">
+        <div class="fa-controls">
+          <div class="fa-group">
+            <label class="fa-label">KEY LENGTH</label>
+            <div class="fa-kl-wrap">
+              <button class="kl-btn" onclick="changeKeyLen(-1)">−</button>
+              <span class="kl-val" id="kl-val">6</span>
+              <button class="kl-btn" onclick="changeKeyLen(+1)">+</button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-freq" onclick="runFreqAnalysis()">🔬 Analyse Frequencies</button>
+        </div>
+
+        <div class="freq-results hidden" id="freq-results">
+          <div class="freq-results-label">// FREQUENCY GRIDS — each column = one key position</div>
+          <div class="freq-grids" id="freq-grids"></div>
+        </div>
+      </div>
+
+      <!-- Step 4: Manual Key Builder + Decrypt -->
+      <div class="sec-divider"><h3>Step 4 — Build Key &amp; Decrypt</h3></div>
+      <div class="decrypt-card">
+        <div class="key-builder">
+          <label class="fa-label">ENTER CANDIDATE KEY</label>
+          <div class="kb-row">
+            <input class="key-input" id="key-input" type="text" placeholder="CRYPTO" maxlength="20"
+                   oninput="this.value=this.value.toUpperCase(); liveDecrypt()"/>
+            <button class="btn btn-primary" onclick="liveDecrypt()">🔓 Decrypt</button>
+          </div>
+          <div class="key-hint" id="key-hint"></div>
+        </div>
+
+        <div class="decrypted-out-wrap" id="decrypted-out-wrap" style="display:none">
+          <div class="do-header">
+            <span class="do-label">// DECRYPTED OUTPUT</span>
+            <span class="do-badge" id="do-badge">Decrypting…</span>
+          </div>
+          <div class="decrypted-out" id="decrypted-out"></div>
+        </div>
+      </div>
+
+      <!-- Flag reveal -->
+      <div id="flag-reveal" class="flag-reveal hidden">
+        <div class="fr-glow"></div>
+        <div class="fr-icon">🔓</div>
+        <h2 class="fr-title">Vigenère Cracked!</h2>
+        <p class="fr-sub">Le Chiffre Indéchiffrable — defeated by frequency analysis.</p>
+        <div class="fr-box">
+          <span class="fr-lbl">🚩 CAPTURED FLAG</span>
+          <code class="fr-val" id="fr-val"></code>
+          <button class="btn-copy-sm" onclick="copyFlag()">📋 Copy</button>
+          <div class="copy-toast hidden" id="copy-toast">✓ Copied!</div>
+        </div>
+        <div class="fr-proof">
+          <div class="fp-row"><span class="fp-k">Key Length</span><span class="fp-v fp-kl">6</span></div>
+          <div class="fp-row"><span class="fp-k">Key</span><span class="fp-v fp-key">CRYPTO</span></div>
+          <div class="fp-row"><span class="fp-k">Flag in plaintext</span><span class="fp-v fp-plain">…THE FLAG IS FLAGVAULT V1GEN3R3…</span></div>
+          <div class="fp-row"><span class="fp-k">Flag</span><span class="fp-v fp-flag">FlagVault{v1gen3r3_fr3qu3ncy_4n4lys1s}</span></div>
+        </div>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- ═══ RIGHT ═══ -->
+    <div class="vig-right">
+
+      <div class="sec-divider"><h3>Challenge Info</h3></div>
+      <div class="info-panel">
+        <div class="info-row"><span class="info-key">Cipher</span><span class="tag tag-amber">Vigenère</span></div>
+        <div class="info-row"><span class="info-key">Key</span><span class="tag tag-red">Unknown</span></div>
+        <div class="info-row"><span class="info-key">Method</span><code>Freq Analysis + IC</code></div>
+        <div class="info-row"><span class="info-key">Category</span><span class="tag tag-green">Cryptography</span></div>
+        <div class="info-row"><span class="info-key">Points</span><span style="color:var(--accent);font-family:var(--font-hud)">300</span></div>
+      </div>
+
+      <div class="sec-divider"><h3>Background</h3></div>
+      <div class="desc-block">
+        <p>The Vigenère cipher uses a repeating keyword to shift each letter. Once called <em>Le Chiffre Indéchiffrable</em>, it was broken by Babbage &amp; Kasiski using the key's repetition.</p>
+        <br/>
+        <p>With a long ciphertext, statistical techniques reveal both the key length and each key letter.</p>
+      </div>
+
+      <!-- Vigenère primer -->
+      <div class="sec-divider"><h3>How Vigenère Works</h3></div>
+      <div class="vig-primer">
+        <div class="vp-example">
+          <div class="vp-row">
+            <span class="vp-lbl">Plaintext</span>
+            <span class="vp-val vp-plain">ATTACK</span>
+          </div>
+          <div class="vp-row">
+            <span class="vp-lbl">Key</span>
+            <span class="vp-val vp-key">CRYPTO</span>
+          </div>
+          <div class="vp-row">
+            <span class="vp-lbl">Key repeated</span>
+            <span class="vp-val vp-keyr">CRYPTO</span>
+          </div>
+          <div class="vp-row">
+            <span class="vp-lbl">Cipher</span>
+            <span class="vp-val vp-cipher">CVXPCO</span>
+          </div>
+        </div>
+        <div class="vp-formula">E(x) = (P + K) mod 26 &nbsp;|&nbsp; D(x) = (C − K + 26) mod 26</div>
+      </div>
+
+      <!-- Attack steps -->
+      <div class="sec-divider"><h3>Attack Strategy</h3></div>
+      <div class="attack-steps">
+        <div class="as-step"><div class="as-n">01</div><div class="as-txt"><strong>Index of Coincidence</strong><br/>IC = Σ n_i(n_i−1) / N(N−1)<br/>English ≈ 0.065, random ≈ 0.038</div></div>
+        <div class="as-arr">↓</div>
+        <div class="as-step"><div class="as-n">02</div><div class="as-txt"><strong>Find Key Length</strong><br/>Try L = 1…20. Split cipher into L streams. Average IC closest to 0.065 = key length</div></div>
+        <div class="as-arr">↓</div>
+        <div class="as-step"><div class="as-n">03</div><div class="as-txt"><strong>Per-Position Frequency</strong><br/>Each stream is a Caesar cipher. Most frequent letter → likely 'E'. Shift = freq_peak − 'E'</div></div>
+        <div class="as-arr">↓</div>
+        <div class="as-step"><div class="as-n">04</div><div class="as-txt"><strong>Decrypt &amp; Find Flag</strong><br/>Reconstruct key, decrypt, scan plaintext for FlagVault{…}</div></div>
+      </div>
+
+      <!-- IC reference -->
+      <div class="sec-divider"><h3>IC Reference Values</h3></div>
+      <div class="ic-ref">
+        <div class="ir-row ir-hi"><span class="ir-lbl">English text</span><span class="ir-val">≈ 0.0650</span></div>
+        <div class="ir-row ir-mid"><span class="ir-lbl">Vigenère (L=1)</span><span class="ir-val">≈ 0.0650</span></div>
+        <div class="ir-row ir-lo"><span class="ir-lbl">Vigenère (L=2)</span><span class="ir-val">≈ 0.0520</span></div>
+        <div class="ir-row ir-lo"><span class="ir-lbl">Vigenère (L≥6)</span><span class="ir-val">≈ 0.0400</span></div>
+        <div class="ir-row ir-rnd"><span class="ir-lbl">Random text</span><span class="ir-val">≈ 0.0385</span></div>
+      </div>
+
+      <!-- Hints -->
+      <div class="sec-divider"><h3>Hints</h3></div>
+      <div class="hints-list">
+        <div class="hint-card">
+          <div class="hint-header" onclick="toggleHint(1)">
+            <span>💡 HINT 1</span><span class="hint-cost tag tag-green">−25 pts</span>
+            <span class="hint-toggle" id="h1t">▼ Reveal</span>
+          </div>
+          <div class="hint-body hidden" id="h1b">
+            Run the IC Analysis. Watch for a spike — the key length where average IC is closest to 0.065. The correct key length is a small single-digit number.
+          </div>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header" onclick="toggleHint(2)">
+            <span>💡 HINT 2</span><span class="hint-cost tag tag-red">−50 pts</span>
+            <span class="hint-toggle" id="h2t">▼ Reveal</span>
+          </div>
+          <div class="hint-body hidden" id="h2b">
+            The key length is 6. Once you know that, split the ciphertext into 6 interleaved streams. In each stream, find the most frequent letter — subtract 4 (position of 'E' = 4) to get each key letter.
+          </div>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header" onclick="toggleHint(3)">
+            <span>💡 HINT 3</span><span class="hint-cost tag tag-purple">−75 pts</span>
+            <span class="hint-toggle" id="h3t">▼ Reveal</span>
+          </div>
+          <div class="hint-body hidden" id="h3b">
+            The key is a 6-letter word commonly associated with this field. It starts with 'C'. Look for the flag text inside the decrypted output — it's written in the plaintext directly.
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="sec-divider"><h3>Submit Flag</h3></div>
+      <div class="flag-submit-panel">
+        <div class="form-group flag-input-wrap">
+          <span class="flag-prefix">FlagVault{</span>
+          <input class="form-control" id="flag-input" type="text" placeholder="your_flag_here" autocomplete="off"/>
+        </div>
+        <button class="btn btn-primary" onclick="submitFlag()" style="width:100%">&gt;_ SUBMIT FLAG</button>
+        <div class="submit-result" id="flag-result"></div>
+      </div>
+
+    </div><!-- /right -->
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">FLAG<span>VAULT</span> CTF</div>
+  <div class="footer-copy">Challenge #C4 · Cryptography · Vigenère Frequency Analysis</div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
