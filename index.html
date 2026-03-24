@@ -14,11 +14,6 @@
   <a href="#" class="nav-brand">
     <span class="bracket">[</span><span class="brand-flag">FLAG</span>VAULT<span class="bracket">]</span>
   </a>
-  <ul class="nav-links">
-    <li><a href="#">Challenges</a></li>
-    <li><a href="#" class="active">Vigenère</a></li>
-    <li><a href="#">Scoreboard</a></li>
-  </ul>
   <div class="nav-status"><div class="status-dot"></div>CHALLENGE LIVE</div>
 </nav>
 
@@ -33,14 +28,6 @@
       use frequency analysis and the Index of Coincidence to crack it.
     </p>
   </header>
-
-  <!-- Stats -->
-  <div class="stats-strip">
-    <div class="stat-box"><span class="stat-val">300</span><span class="stat-label">Points</span></div>
-    <div class="stat-box"><span class="stat-val amber">Medium</span><span class="stat-label">Difficulty</span></div>
-    <div class="stat-box"><span class="stat-val red">31</span><span class="stat-label">Solves</span></div>
-    <div class="stat-box"><span class="stat-val">Crypto</span><span class="stat-label">Category</span></div>
-  </div>
 
   <!-- Download bar -->
   <div class="download-bar">
@@ -211,50 +198,6 @@
         <div class="ir-row ir-lo"><span class="ir-lbl">Vigenère (L≥6)</span><span class="ir-val">≈ 0.0400</span></div>
         <div class="ir-row ir-rnd"><span class="ir-lbl">Random text</span><span class="ir-val">≈ 0.0385</span></div>
       </div>
-
-      <!-- Hints -->
-      <div class="sec-divider"><h3>Hints</h3></div>
-      <div class="hints-list">
-        <div class="hint-card">
-          <div class="hint-header" onclick="toggleHint(1)">
-            <span>💡 HINT 1</span><span class="hint-cost tag tag-green">−25 pts</span>
-            <span class="hint-toggle" id="h1t">▼ Reveal</span>
-          </div>
-          <div class="hint-body hidden" id="h1b">
-            Run the IC Analysis. Watch for a spike — the key length where average IC is closest to 0.065. The correct key length is a small single-digit number.
-          </div>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header" onclick="toggleHint(2)">
-            <span>💡 HINT 2</span><span class="hint-cost tag tag-red">−50 pts</span>
-            <span class="hint-toggle" id="h2t">▼ Reveal</span>
-          </div>
-          <div class="hint-body hidden" id="h2b">
-            The key length is 6. Once you know that, split the ciphertext into 6 interleaved streams. In each stream, find the most frequent letter — subtract 4 (position of 'E' = 4) to get each key letter.
-          </div>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header" onclick="toggleHint(3)">
-            <span>💡 HINT 3</span><span class="hint-cost tag tag-purple">−75 pts</span>
-            <span class="hint-toggle" id="h3t">▼ Reveal</span>
-          </div>
-          <div class="hint-body hidden" id="h3b">
-            The key is a 6-letter word commonly associated with this field. It starts with 'C'. Look for the flag text inside the decrypted output — it's written in the plaintext directly.
-          </div>
-        </div>
-      </div>
-
-      <!-- Submit -->
-      <div class="sec-divider"><h3>Submit Flag</h3></div>
-      <div class="flag-submit-panel">
-        <div class="form-group flag-input-wrap">
-          <span class="flag-prefix">FlagVault{</span>
-          <input class="form-control" id="flag-input" type="text" placeholder="your_flag_here" autocomplete="off"/>
-        </div>
-        <button class="btn btn-primary" onclick="submitFlag()" style="width:100%">&gt;_ SUBMIT FLAG</button>
-        <div class="submit-result" id="flag-result"></div>
-      </div>
-
     </div><!-- /right -->
   </div>
 </div>
